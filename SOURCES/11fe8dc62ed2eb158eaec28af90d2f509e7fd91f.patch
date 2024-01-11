@@ -1,0 +1,25 @@
+From a119ca768dfeefef7609b55acbf6400fafb0ee5a Mon Sep 17 00:00:00 2001
+From: "brian m. carlson" <bk2204@github.com>
+Date: Mon, 25 Jul 2022 17:29:34 +0000
+Subject: [PATCH] t: set init.defaultBranch
+
+Previously, we used a template to set the default HEAD ref to "main" so
+that our branch would be correct.  It appears that Git has changed
+things so that that no longer works, so set init.defaultBranch as well
+to make sure we initialize new repositories properly.
+---
+ t/testhelpers.sh | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/t/testhelpers.sh b/t/testhelpers.sh
+index 7c921f43e8..ea5dc05c4f 100644
+--- a/t/testhelpers.sh
++++ b/t/testhelpers.sh
+@@ -607,6 +607,7 @@ setup() {
+     git config --global http.$LFS_CLIENT_CERT_URL/.sslKey "$LFS_CLIENT_KEY_FILE"
+     git config --global http.$LFS_CLIENT_CERT_URL/.sslCert "$LFS_CLIENT_CERT_FILE"
+     git config --global http.$LFS_CLIENT_CERT_URL/.sslVerify "false"
++    git config --global init.defaultBranch main
+   fi | sed -e 's/^/# /g'
+ 
+   # setup the git credential password storage
