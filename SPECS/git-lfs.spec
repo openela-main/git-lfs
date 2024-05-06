@@ -2,14 +2,14 @@
 
 # https://github.com/git-lfs/git-lfs
 %global goipath         github.com/git-lfs/git-lfs
-Version:                3.2.0
+Version:                3.4.1
 
 %gometa
 
 %global gobuilddir %{_builddir}/%{name}-%{version}/_build
 
 Name:           git-lfs
-Release:        2%{?dist}
+Release:        1%{?dist}
 Summary:        Git extension for versioning large files
 
 License:        MIT
@@ -17,7 +17,6 @@ URL:            https://git-lfs.github.io/
 Source0:        https://github.com/%{name}/%{name}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
 Source1:        README.Fedora
 
-Patch:          https://github.com/git-lfs/git-lfs/commit/11fe8dc62ed2eb158eaec28af90d2f509e7fd91f.patch
 
 # Generated provides by vendor2provides.py
 # https://src.fedoraproject.org/rpms/syncthing/blob/603e4e03a92a7d704d199629dd85304018e8279d/f/vendor2provides.py
@@ -25,12 +24,12 @@ Provides:       bundled(golang(github.com/alexbrainman/sspi)) = 909beea
 Provides:       bundled(golang(github.com/avast/retry-go)) = 2.4.2+incompatible
 Provides:       bundled(golang(github.com/davecgh/go-spew)) = 1.1.1
 Provides:       bundled(golang(github.com/dpotapov/go-spnego)) = 298b63a
-Provides:       bundled(golang(github.com/git-lfs/gitobj/v2)) = 2.1.0
+Provides:       bundled(golang(github.com/git-lfs/gitobj/v2)) = 2.1.1
 Provides:       bundled(golang(github.com/git-lfs/go-netrc)) = f0c862d
 Provides:       bundled(golang(github.com/git-lfs/pktline)) = 06e9096
 Provides:       bundled(golang(github.com/git-lfs/wildmatch/v2)) = 2.0.1
 Provides:       bundled(golang(github.com/hashicorp/go-uuid)) = 1.0.2
-Provides:       bundled(golang(github.com/inconshreveable/mousetrap)) = 1.0.0
+Provides:       bundled(golang(github.com/inconshreveable/mousetrap)) = 1.0.1
 Provides:       bundled(golang(github.com/jcmturner/aescts/v2)) = 2.0.0
 Provides:       bundled(golang(github.com/jcmturner/dnsutils/v2)) = 2.0.0
 Provides:       bundled(golang(github.com/jcmturner/gofork)) = 1.0.0
@@ -43,23 +42,23 @@ Provides:       bundled(golang(github.com/olekukonko/ts)) = 78ecb04
 Provides:       bundled(golang(github.com/pkg/errors)) = c605e28
 Provides:       bundled(golang(github.com/pmezard/go-difflib)) = 1.0.0
 Provides:       bundled(golang(github.com/rubyist/tracerx)) = 7879593
-Provides:       bundled(golang(github.com/spf13/cobra)) = 0.0.3
-Provides:       bundled(golang(github.com/spf13/pflag)) = 1.0.3
+Provides:       bundled(golang(github.com/spf13/cobra)) = 1.6.0
+Provides:       bundled(golang(github.com/spf13/pflag)) = 1.0.5
 Provides:       bundled(golang(github.com/ssgelm/cookiejarparser)) = 1.0.1
 Provides:       bundled(golang(github.com/stretchr/testify)) = 1.6.1
 Provides:       bundled(golang(github.com/xeipuuv/gojsonpointer)) = 4e3ac27
 Provides:       bundled(golang(github.com/xeipuuv/gojsonreference)) = bd5ef7b
 Provides:       bundled(golang(github.com/xeipuuv/gojsonschema)) = 6b67b3f
 Provides:       bundled(golang(golang.org/x/crypto)) = 7b82a4e
-Provides:       bundled(golang(golang.org/x/net)) = 69e39ba
-Provides:       bundled(golang(golang.org/x/sync)) = 036812b
-Provides:       bundled(golang(golang.org/x/sys)) = 665e8c7
-Provides:       bundled(golang(golang.org/x/text)) = 0.3.7
-Provides:       bundled(golang(gopkg.in/yaml.v3)) = 9f266ea
+Provides:       bundled(golang(golang.org/x/net)) = 0.7.0
+Provides:       bundled(golang(golang.org/x/sync)) = 0.1.0
+Provides:       bundled(golang(golang.org/x/sys)) = 0.5.0
+Provides:       bundled(golang(golang.org/x/text)) = 0.7.0
+Provides:       bundled(golang(gopkg.in/yaml.v3)) = 3.0.1
+
 
 # Generate man pages
-BuildRequires:  /usr/bin/ronn
-
+BuildRequires:  /usr/bin/asciidoctor
 
 %if %{with check}
 # Tests
@@ -93,8 +92,8 @@ export GOPATH=%{gobuilddir}:%{gopath}
 export GO111MODULE=off
 
 # Build manpages first (some embedding in the executable is done.)
+make man GIT_LFS_SHA=unused VERSION=unused PREFIX=unused
 pushd docs
-ronn --roff man/*.ronn
 %gobuild -o %{gobuilddir}/bin/mangen man/mangen.go
 %{gobuilddir}/bin/mangen
 popd
@@ -109,17 +108,17 @@ done
 %gobuild -o "%{gobuilddir}/bin/git-lfs-test-server-api" t/git-lfs-test-server-api/*.go
 popd
 
-# Move man pages out of docs so they don't get installed twice.
-mv docs/man .
+# Remove man pages from docs so they don't get installed twice.
+rm -r docs/man
 
 
 %install
 # In Fedora this is done by using %%gopkginstall
 install -Dpm0755 %{gobuilddir}/bin/git-lfs %{buildroot}%{_bindir}/%{name}
-install -d -p %{buildroot}%{_mandir}/man1/
-install -Dpm0644 man/*.1 %{buildroot}%{_mandir}/man1/
-install -d -p %{buildroot}%{_mandir}/man5/
-install -Dpm0644 man/*.5 %{buildroot}%{_mandir}/man5/
+for section in 1 5 7; do
+  install -d -p %{buildroot}%{_mandir}/man${section}/
+  install -Dpm0644 man/man${section}/*.${section} %{buildroot}%{_mandir}/man${section}/
+done
 
 %post
 %{_bindir}/%{name} install --system --skip-repo
@@ -135,7 +134,9 @@ exit 0
 %check
 %gocheck
 PATH=%{buildroot}%{_bindir}:%{gobuilddir}/bin:$PATH \
-    make -C t PROVE_EXTRA_ARGS="-j$(getconf _NPROCESSORS_ONLN)"
+# https://github.com/git-lfs/git-lfs/issues/5609
+# tests fails when running with low level of parallelism
+    make -C t PROVE_EXTRA_ARGS="-j40 -v"
 %endif
 
 
@@ -144,14 +145,15 @@ PATH=%{buildroot}%{_bindir}:%{gobuilddir}/bin:$PATH \
 %doc README.md CHANGELOG.md docs
 %license LICENSE.md
 %{_bindir}/%{name}
-%{_mandir}/man1/%%{name}*.1*
-%{_mandir}/man5/%%{name}*.5*
+%{_mandir}/man1/%{name}*.1*
+%{_mandir}/man5/%{name}*.5*
+%{_mandir}/man7/%{name}*.7*
 
 
 %changelog
-* Wed Apr 24 2024 Ondřej Pohořelský <opohorel@redhat.com> - 3.2.0-2
-- Rebuild with new Golang
-- Resolves: RHEL-32569
+* Mon Dec 18 2023 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-1
+- Update to 3.4.1
+- Resolves: RHEL-17101
 
 * Thu Jan 05 2023 Ondřej Pohořelský <opohorel@redhat.com> - 3.2.0-1
 - Update to 3.2.0
