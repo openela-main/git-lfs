@@ -1,16 +1,15 @@
-# As `ronn` package has not been packaged for RHEL7 yet, man pages need to be generated on Fedora when rebasing to a new version as follows:
+# As `asciidoctor` package has not been packaged to RHEL 8:
 
-# Pass package version(eg. `2.4.1`) as argument
+# Pass package version(eg. `3.4.0`) as argument
 
 VERSION=$1
 
-cd git-lfs-$VERSION/docs
+cd git-lfs-$VERSION
 
-ronn --roff man/*.ronn
+make man GIT_LFS_SHA=unused VERSION=unused PREFIX=unused
+rm -r man/html
 
-cd ..
-
-tar -czvf manpages.tgz docs/man/*.{1,5}
+tar -czvf manpages.tgz man/*
 
 cp manpages.tgz ../
 
