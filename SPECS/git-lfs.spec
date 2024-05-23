@@ -19,7 +19,7 @@ Version:                3.4.1
 %global gobuild CGO_CPPFLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-all" go build -compiler gc -buildmode pie '-tags=rpm_crashtraceback libtrust_openssl ' -ldflags "-linkmode=external -compressdwarf=false ${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -extldflags '%__global_ldflags'" -a -v -x %{?**}
 
 Name:           git-lfs
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Git extension for versioning large files
 
 License:        MIT
@@ -170,6 +170,10 @@ PATH=%{buildroot}%{_bindir}:%{gobuilddir}/bin:$PATH \
 
 
 %changelog
+* Mon Apr 22 2024 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-2
+- Rebuild with new Golang
+- Resolves: RHEL-32543, RHEL-28377, RHEL-28399, RHEL-28423
+
 * Mon Dec 18 2023 Ondrej Pohorelsky <opohorel@redhat.com> - 3.4.1-1
 - Update to version 3.4.1
 - Resolves: RHEL-17102
