@@ -9,7 +9,7 @@ Version:                3.4.1
 %global gobuilddir %{_builddir}/%{name}-%{version}/_build
 
 Name:           git-lfs
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Git extension for versioning large files
 
 License:        MIT
@@ -91,6 +91,10 @@ sed -i -e 's!^BINPATH=.\+!BINPATH="%{gobuilddir}/bin"!g' t/testenv.sh
 export GOPATH=%{gobuilddir}:%{gopath}
 export GO111MODULE=off
 
+# Enable FIPS support at build time by enabling CGO and enforcing strict FIPS runtime
+export CGO_ENABLED=1
+export GOEXPERIMENT=strictfipsruntime
+
 # Build manpages first (some embedding in the executable is done.)
 make man GIT_LFS_SHA=unused VERSION=unused PREFIX=unused
 pushd docs
@@ -151,6 +155,10 @@ PATH=%{buildroot}%{_bindir}:%{gobuilddir}/bin:$PATH \
 
 
 %changelog
+* Fri Aug 16 2024 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-3
+- Make Git-LFS FIPS compliant
+- Resolves: RHEL-53085
+
 * Mon Apr 22 2024 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-2
 - Rebuild with new Golang
 - Resolves: RHEL-32570, RHEL-28385, RHEL-28402, RHEL-28432
