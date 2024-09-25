@@ -9,7 +9,7 @@ Version:                3.4.1
 %global gobuilddir %{_builddir}/%{name}-%{version}/_build
 
 Name:           git-lfs
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Git extension for versioning large files
 
 License:        MIT
@@ -155,6 +155,10 @@ PATH=%{buildroot}%{_bindir}:%{gobuilddir}/bin:$PATH \
 
 
 %changelog
+* Mon Sep 23 2024 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-4
+- Rebuild with new Golang
+- Resolves: RHEL-57920
+
 * Fri Aug 16 2024 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-3
 - Make Git-LFS FIPS compliant
 - Resolves: RHEL-53085
