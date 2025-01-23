@@ -17,6 +17,11 @@ URL:            https://git-lfs.github.io/
 Source0:        https://github.com/%{name}/%{name}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
 Source1:        README.Fedora
 
+# https://github.com/advisories/GHSA-q6r2-x2cc-vrp7
+# Backports 268628b, 4423696, 0345b6f and f6904cc that resolves the CVE-2024-53263
+# Aditionally backports b326b63
+# Commits had to be adapted as git-lfs-3.4.1 doesn't support multistage authentication
+Patch:          git-lfs-3.4.1-cve-2024-53263.patch
 
 # Generated provides by vendor2provides.py
 # https://src.fedoraproject.org/rpms/syncthing/blob/603e4e03a92a7d704d199629dd85304018e8279d/f/vendor2provides.py
@@ -155,17 +160,17 @@ PATH=%{buildroot}%{_bindir}:%{gobuilddir}/bin:$PATH \
 
 
 %changelog
-* Mon Sep 23 2024 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-4
-- Rebuild with new Golang
-- Resolves: RHEL-57920
+* Fri Jan 17 2025 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-4
+- Backport CVE-2024-53263 fixes
+- Resolves: RHEL-73936
 
-* Fri Aug 16 2024 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-3
+* Wed Aug 07 2024 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-3
 - Make Git-LFS FIPS compliant
-- Resolves: RHEL-53085
+- Resolves: RHEL-53086
 
-* Mon Apr 22 2024 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-2
+* Wed May 22 2024 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-2
 - Rebuild with new Golang
-- Resolves: RHEL-32570, RHEL-28385, RHEL-28402, RHEL-28432
+- Resolves: RHEL-32571
 
 * Mon Dec 18 2023 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-1
 - Update to 3.4.1
