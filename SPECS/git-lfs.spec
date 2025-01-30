@@ -19,7 +19,7 @@ Version:                3.4.1
 %global gobuild CGO_CPPFLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-all" go build -compiler gc -buildmode pie '-tags=rpm_crashtraceback libtrust_openssl ' -ldflags "-linkmode=external -compressdwarf=false ${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -extldflags '%__global_ldflags'" -a -v -x %{?**}
 
 Name:           git-lfs
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Git extension for versioning large files
 
 License:        MIT
@@ -29,6 +29,11 @@ Source1:        manpages.tgz
 # See this script. Generating of manpages is performed on other distros due to some missing rubygem-asciidoctor on RHEL-8
 Source2:        gen-manpages.sh
 
+# https://github.com/advisories/GHSA-q6r2-x2cc-vrp7
+# Backports 268628b, 4423696, 0345b6f and f6904cc that resolves the CVE-2024-53263
+# Aditionally backports b326b63
+# Commits had to be adapted as git-lfs-3.4.1 doesn't support multistage authentication
+Patch:          git-lfs-3.4.1-cve-2024-53263.patch
 
 # Generated provides by vendor2provides.py
 # https://src.fedoraproject.org/rpms/syncthing/blob/603e4e03a92a7d704d199629dd85304018e8279d/f/vendor2provides.py
@@ -170,6 +175,10 @@ PATH=%{buildroot}%{_bindir}:%{gobuilddir}/bin:$PATH \
 
 
 %changelog
+* Fri Jan 17 2025 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-4
+- Backport CVE-2024-53263 fixes
+- Resolves: RHEL-73931
+
 * Mon Sep 23 2024 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-3
 - Rebuild with new Golang
 - Resolves: RHEL-57900
