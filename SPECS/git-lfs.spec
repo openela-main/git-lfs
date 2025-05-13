@@ -1,15 +1,15 @@
 %bcond_without check
 
 # https://github.com/git-lfs/git-lfs
-%global goipath         github.com/git-lfs/git-lfs
-Version:                3.4.1
+%global goipath         github.com/git-lfs/git-lfs/v3
+Version:                3.6.1
 
 %gometa
 
 %global gobuilddir %{_builddir}/%{name}-%{version}/_build
 
 Name:           git-lfs
-Release:        4%{?dist}
+Release:        1%{?dist}
 Summary:        Git extension for versioning large files
 
 License:        MIT
@@ -17,11 +17,6 @@ URL:            https://git-lfs.github.io/
 Source0:        https://github.com/%{name}/%{name}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
 Source1:        README.Fedora
 
-# https://github.com/advisories/GHSA-q6r2-x2cc-vrp7
-# Backports 268628b, 4423696, 0345b6f and f6904cc that resolves the CVE-2024-53263
-# Aditionally backports b326b63
-# Commits had to be adapted as git-lfs-3.4.1 doesn't support multistage authentication
-Patch:          git-lfs-3.4.1-cve-2024-53263.patch
 
 # Generated provides by vendor2provides.py
 # https://src.fedoraproject.org/rpms/syncthing/blob/603e4e03a92a7d704d199629dd85304018e8279d/f/vendor2provides.py
@@ -34,31 +29,32 @@ Provides:       bundled(golang(github.com/git-lfs/go-netrc)) = f0c862d
 Provides:       bundled(golang(github.com/git-lfs/pktline)) = 06e9096
 Provides:       bundled(golang(github.com/git-lfs/wildmatch/v2)) = 2.0.1
 Provides:       bundled(golang(github.com/hashicorp/go-uuid)) = 1.0.2
-Provides:       bundled(golang(github.com/inconshreveable/mousetrap)) = 1.0.1
+Provides:       bundled(golang(github.com/inconshreveable/mousetrap)) = 1.1.0
 Provides:       bundled(golang(github.com/jcmturner/aescts/v2)) = 2.0.0
 Provides:       bundled(golang(github.com/jcmturner/dnsutils/v2)) = 2.0.0
 Provides:       bundled(golang(github.com/jcmturner/gofork)) = 1.0.0
 Provides:       bundled(golang(github.com/jcmturner/goidentity/v6)) = 6.0.1
 Provides:       bundled(golang(github.com/jcmturner/gokrb5/v8)) = 8.4.2
 Provides:       bundled(golang(github.com/jcmturner/rpc/v2)) = 2.0.3
+Provides:       bundled(golang(github.com/jmhodges/clock)) = 1.2.0
 Provides:       bundled(golang(github.com/leonelquinteros/gotext)) = 1.5.0
 Provides:       bundled(golang(github.com/mattn/go-isatty)) = 0.0.4
 Provides:       bundled(golang(github.com/olekukonko/ts)) = 78ecb04
 Provides:       bundled(golang(github.com/pkg/errors)) = c605e28
 Provides:       bundled(golang(github.com/pmezard/go-difflib)) = 1.0.0
 Provides:       bundled(golang(github.com/rubyist/tracerx)) = 7879593
-Provides:       bundled(golang(github.com/spf13/cobra)) = 1.6.0
+Provides:       bundled(golang(github.com/spf13/cobra)) = 1.7.0
 Provides:       bundled(golang(github.com/spf13/pflag)) = 1.0.5
 Provides:       bundled(golang(github.com/ssgelm/cookiejarparser)) = 1.0.1
 Provides:       bundled(golang(github.com/stretchr/testify)) = 1.6.1
 Provides:       bundled(golang(github.com/xeipuuv/gojsonpointer)) = 4e3ac27
 Provides:       bundled(golang(github.com/xeipuuv/gojsonreference)) = bd5ef7b
 Provides:       bundled(golang(github.com/xeipuuv/gojsonschema)) = 6b67b3f
-Provides:       bundled(golang(golang.org/x/crypto)) = 7b82a4e
-Provides:       bundled(golang(golang.org/x/net)) = 0.7.0
+Provides:       bundled(golang(golang.org/x/crypto)) = 0.21.0
+Provides:       bundled(golang(golang.org/x/net)) = 0.23.0
 Provides:       bundled(golang(golang.org/x/sync)) = 0.1.0
-Provides:       bundled(golang(golang.org/x/sys)) = 0.5.0
-Provides:       bundled(golang(golang.org/x/text)) = 0.7.0
+Provides:       bundled(golang(golang.org/x/sys)) = 0.18.0
+Provides:       bundled(golang(golang.org/x/text)) = 0.14.0
 Provides:       bundled(golang(gopkg.in/yaml.v3)) = 3.0.1
 
 
@@ -160,9 +156,13 @@ PATH=%{buildroot}%{_bindir}:%{gobuilddir}/bin:$PATH \
 
 
 %changelog
-* Fri Jan 17 2025 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-4
-- Backport CVE-2024-53263 fixes
-- Resolves: RHEL-73936
+* Wed Jan 15 2025 Ondřej Pohořelský <opohorel@redhat.com> - 3.6.1-1
+- Update to 3.6.1
+- Resolves: RHEL-73940
+
+* Thu Nov 28 2024 Ondřej Pohořelský <opohorel@redhat.com> - 3.6.0-1
+- Update to 3.6.0
+- Resolves: RHEL-63968, RHEL-61045, RHEL-47219, RHEL-43318, RHEL-35936, RHEL-2791
 
 * Wed Aug 07 2024 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-3
 - Make Git-LFS FIPS compliant
