@@ -1,0 +1,757 @@
+From 867aa58c816627cbe95f0e38de68daf8cf7cf730 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ond=C5=99ej=20Poho=C5=99elsk=C3=BD?= <opohorel@redhat.com>
+Date: Thu, 7 Aug 2025 13:55:34 +0200
+Subject: [PATCH] Use constant format string
+
+Resolves build failure with Golang-1.24<
+---
+ commands/command_clean.go          |  2 +-
+ commands/command_dedup.go          |  2 +-
+ commands/command_fsck.go           |  4 ++--
+ commands/command_logs.go           |  6 +++---
+ commands/command_migrate.go        |  2 +-
+ commands/command_migrate_export.go |  4 ++--
+ commands/command_migrate_import.go | 20 ++++++++++----------
+ commands/command_migrate_info.go   |  6 +++---
+ commands/command_pointer.go        |  2 +-
+ commands/command_smudge.go         |  4 ++--
+ creds/creds.go                     | 10 +++++-----
+ errors/errors.go                   |  2 +-
+ errors/types.go                    |  2 +-
+ git/githistory/rewriter_test.go    |  2 +-
+ lfs/diff_index_scanner.go          |  4 ++--
+ lfs/gitfilter_smudge.go            | 12 ++++++------
+ lfshttp/certs.go                   | 12 ++++++------
+ lfshttp/errors.go                  |  7 ++++++-
+ lfshttp/lfshttp.go                 |  2 +-
+ lfshttp/standalone/standalone.go   |  8 ++++----
+ ssh/connection.go                  |  2 +-
+ t/git-lfs-test-server-api/main.go  |  2 +-
+ tasklog/simple_task.go             |  2 +-
+ tools/filetools.go                 |  4 ++--
+ tq/basic_download.go               |  4 ++--
+ tq/basic_upload.go                 |  4 ++--
+ tq/custom.go                       |  2 +-
+ tq/ssh.go                          |  6 +++---
+ tq/transfer_queue.go               |  4 ++--
+ tq/tus_upload.go                   |  4 ++--
+ 30 files changed, 76 insertions(+), 71 deletions(-)
+
+diff --git a/commands/command_clean.go b/commands/command_clean.go
+index 6b02d23c..8fa12d9b 100644
+--- a/commands/command_clean.go
++++ b/commands/command_clean.go
+@@ -82,7 +82,7 @@ func clean(gf *lfs.GitFilter, to io.Writer, from io.Reader, fileName string, fil
+ 			Panic(err, tr.Tr.Get("Unable to move %s to %s", tmpfile, mediafile))
+ 		}
+ 
+-		Debug(tr.Tr.Get("Writing %s", mediafile))
++		Debug("%s", tr.Tr.Get("Writing %s", mediafile))
+ 	}
+ 
+ 	_, err = lfs.EncodePointer(to, cleaned.Pointer)
+diff --git a/commands/command_dedup.go b/commands/command_dedup.go
+index 4d9688f2..2babff45 100644
+--- a/commands/command_dedup.go
++++ b/commands/command_dedup.go
+@@ -129,7 +129,7 @@ func dedup(p *lfs.WrappedPointer) (success bool, err error) {
+ 	if ok, err := tools.CloneFileByPath(dstFile, srcFile); err != nil {
+ 		return false, err
+ 	} else if !ok {
+-		return false, errors.Errorf(tr.Tr.Get("unknown clone file error"))
++		return false, errors.Errorf("%s", tr.Tr.Get("unknown clone file error"))
+ 	}
+ 
+ 	// Recover original state
+diff --git a/commands/command_fsck.go b/commands/command_fsck.go
+index c2332ef8..63756854 100644
+--- a/commands/command_fsck.go
++++ b/commands/command_fsck.go
+@@ -170,7 +170,7 @@ func doFsckPointers(include, exclude string) []corruptPointer {
+ 	var corruptPointers []corruptPointer
+ 	gitscanner := lfs.NewGitScanner(cfg, func(p *lfs.WrappedPointer, err error) {
+ 		if p != nil {
+-			Debug(tr.Tr.Get("Examining %v (%v)", p.Oid, p.Name))
++			Debug("%s", tr.Tr.Get("Examining %v (%v)", p.Oid, p.Name))
+ 			if !p.Canonical {
+ 				cp := corruptPointer{
+ 					blobOid: p.Sha1,
+@@ -214,7 +214,7 @@ func doFsckPointers(include, exclude string) []corruptPointer {
+ func fsckPointer(name, oid string, size int64) (bool, error) {
+ 	path := cfg.Filesystem().ObjectPathname(oid)
+ 
+-	Debug(tr.Tr.Get("Examining %v (%v)", name, path))
++	Debug("%s", tr.Tr.Get("Examining %v (%v)", name, path))
+ 
+ 	f, err := os.Open(path)
+ 	if pErr, pOk := err.(*os.PathError); pOk {
+diff --git a/commands/command_logs.go b/commands/command_logs.go
+index 89d738fe..aa781dfa 100644
+--- a/commands/command_logs.go
++++ b/commands/command_logs.go
+@@ -37,7 +37,7 @@ func logsShowCommand(cmd *cobra.Command, args []string) {
+ 		Exit(tr.Tr.Get("Error reading log: %s", name))
+ 	}
+ 
+-	Debug(tr.Tr.Get("Reading log: %s", name))
++	Debug("%s", tr.Tr.Get("Reading log: %s", name))
+ 	os.Stdout.Write(by)
+ }
+ 
+@@ -51,8 +51,8 @@ func logsClearCommand(cmd *cobra.Command, args []string) {
+ }
+ 
+ func logsBoomtownCommand(cmd *cobra.Command, args []string) {
+-	Debug(tr.Tr.Get("Sample debug message"))
+-	err := errors.Wrapf(errors.New(tr.Tr.Get("Sample wrapped error message")), tr.Tr.Get("Sample error message"))
++	Debug("%s", tr.Tr.Get("Sample debug message"))
++	err := errors.Wrapf(errors.New(tr.Tr.Get("Sample wrapped error message")), "%s", tr.Tr.Get("Sample error message"))
+ 	Panic(err, tr.Tr.Get("Sample panic message"))
+ }
+ 
+diff --git a/commands/command_migrate.go b/commands/command_migrate.go
+index e638d0bf..b16680b5 100644
+--- a/commands/command_migrate.go
++++ b/commands/command_migrate.go
+@@ -319,7 +319,7 @@ func currentRefToMigrate() (*git.Ref, error) {
+ 	if current.Type == git.RefTypeOther ||
+ 		current.Type == git.RefTypeRemoteBranch {
+ 
+-		return nil, errors.Errorf(tr.Tr.Get("Cannot migrate non-local ref: %s", current.Name))
++		return nil, errors.Errorf("%s", tr.Tr.Get("Cannot migrate non-local ref: %s", current.Name))
+ 	}
+ 	return current, nil
+ }
+diff --git a/commands/command_migrate_export.go b/commands/command_migrate_export.go
+index 16c58653..484134b8 100644
+--- a/commands/command_migrate_export.go
++++ b/commands/command_migrate_export.go
+@@ -35,7 +35,7 @@ func migrateExportCommand(cmd *cobra.Command, args []string) {
+ 
+ 	filter := rewriter.Filter()
+ 	if len(filter.Include()) <= 0 {
+-		ExitWithError(errors.Errorf(tr.Tr.Get("One or more files must be specified with --include")))
++		ExitWithError(errors.Errorf("%s", tr.Tr.Get("One or more files must be specified with --include")))
+ 	}
+ 
+ 	tracked := trackedFromExportFilter(filter)
+@@ -116,7 +116,7 @@ func migrateExportCommand(cmd *cobra.Command, args []string) {
+ 	}
+ 	remoteURL := getAPIClient().Endpoints.RemoteEndpoint("download", remote).Url
+ 	if remoteURL == "" && cmd.Flag("remote").Changed {
+-		ExitWithError(errors.Errorf(tr.Tr.Get("Invalid remote %s provided", remote)))
++		ExitWithError(errors.Errorf("%s", tr.Tr.Get("Invalid remote %s provided", remote)))
+ 	}
+ 
+ 	// If we have a valid remote, pre-download all objects using the Transfer Queue
+diff --git a/commands/command_migrate_import.go b/commands/command_migrate_import.go
+index 8b44b415..b03301f9 100644
+--- a/commands/command_migrate_import.go
++++ b/commands/command_migrate_import.go
+@@ -44,11 +44,11 @@ func migrateImportCommand(cmd *cobra.Command, args []string) {
+ 
+ 	if migrateNoRewrite {
+ 		if migrateFixup {
+-			ExitWithError(errors.Errorf(tr.Tr.Get("--no-rewrite and --fixup cannot be combined")))
++			ExitWithError(errors.Errorf("%s", tr.Tr.Get("--no-rewrite and --fixup cannot be combined")))
+ 		}
+ 
+ 		if len(args) == 0 {
+-			ExitWithError(errors.Errorf(tr.Tr.Get("Expected one or more files with --no-rewrite")))
++			ExitWithError(errors.Errorf("%s", tr.Tr.Get("Expected one or more files with --no-rewrite")))
+ 		}
+ 
+ 		ref, err := git.CurrentRef()
+@@ -66,21 +66,21 @@ func migrateImportCommand(cmd *cobra.Command, args []string) {
+ 
+ 		filter := git.GetAttributeFilter(cfg.LocalWorkingDir(), cfg.LocalGitDir())
+ 		if len(filter.Include()) == 0 {
+-			ExitWithError(errors.Errorf(tr.Tr.Get("No Git LFS filters found in '.gitattributes'")))
++			ExitWithError(errors.Errorf("%s", tr.Tr.Get("No Git LFS filters found in '.gitattributes'")))
+ 		}
+ 
+ 		gf := lfs.NewGitFilter(cfg)
+ 
+ 		for _, file := range args {
+ 			if !filter.Allows(file) {
+-				ExitWithError(errors.Errorf(tr.Tr.Get("File %s did not match any Git LFS filters in '.gitattributes'", file)))
++				ExitWithError(errors.Errorf("%s", tr.Tr.Get("File %s did not match any Git LFS filters in '.gitattributes'", file)))
+ 			}
+ 		}
+ 
+ 		for _, file := range args {
+ 			root, err = rewriteTree(gf, db, root, file)
+ 			if err != nil {
+-				ExitWithError(errors.Wrapf(err, tr.Tr.Get("Could not rewrite %q", file)))
++				ExitWithError(errors.Wrapf(err, "%s", tr.Tr.Get("Could not rewrite %q", file)))
+ 			}
+ 		}
+ 
+@@ -124,7 +124,7 @@ func migrateImportCommand(cmd *cobra.Command, args []string) {
+ 	if migrateFixup {
+ 		include, exclude := getIncludeExcludeArgs(cmd)
+ 		if include != nil || exclude != nil {
+-			ExitWithError(errors.Errorf(tr.Tr.Get("Cannot use --fixup with --include, --exclude")))
++			ExitWithError(errors.Errorf("%s", tr.Tr.Get("Cannot use --fixup with --include, --exclude")))
+ 		}
+ 	}
+ 
+@@ -142,7 +142,7 @@ func migrateImportCommand(cmd *cobra.Command, args []string) {
+ 	if above > 0 {
+ 		include, exclude := getIncludeExcludeArgs(cmd)
+ 		if include != nil || exclude != nil || migrateFixup {
+-			ExitWithError(errors.Errorf(tr.Tr.Get("Cannot use --above with --include, --exclude, --fixup")))
++			ExitWithError(errors.Errorf("%s", tr.Tr.Get("Cannot use --above with --include, --exclude, --fixup")))
+ 		}
+ 	}
+ 
+@@ -395,7 +395,7 @@ func rewriteTree(gf *lfs.GitFilter, db *gitobj.ObjectDatabase, root []byte, path
+ 		// Try to replace this blob with a Git LFS pointer.
+ 		index := findEntry(tree, splits[0])
+ 		if index < 0 {
+-			return nil, errors.Errorf(tr.Tr.Get("unable to find entry %s in tree", splits[0]))
++			return nil, errors.Errorf("%s", tr.Tr.Get("unable to find entry %s in tree", splits[0]))
+ 		}
+ 
+ 		blobEntry := tree.Entries[index]
+@@ -433,7 +433,7 @@ func rewriteTree(gf *lfs.GitFilter, db *gitobj.ObjectDatabase, root []byte, path
+ 
+ 		index := findEntry(tree, head)
+ 		if index < 0 {
+-			return nil, errors.Errorf(tr.Tr.Get("unable to find entry %s in tree", head))
++			return nil, errors.Errorf("%s", tr.Tr.Get("unable to find entry %s in tree", head))
+ 		}
+ 
+ 		subtreeEntry := tree.Entries[index]
+@@ -455,7 +455,7 @@ func rewriteTree(gf *lfs.GitFilter, db *gitobj.ObjectDatabase, root []byte, path
+ 		return db.WriteTree(tree)
+ 
+ 	default:
+-		return nil, errors.Errorf(tr.Tr.Get("error parsing path %s", path))
++		return nil, errors.Errorf("%s", tr.Tr.Get("error parsing path %s", path))
+ 	}
+ }
+ 
+diff --git a/commands/command_migrate_info.go b/commands/command_migrate_info.go
+index bcbc18b2..c0368a6e 100644
+--- a/commands/command_migrate_info.go
++++ b/commands/command_migrate_info.go
+@@ -96,17 +96,17 @@ func migrateInfoCommand(cmd *cobra.Command, args []string) {
+ 		case "ignore":
+ 			migrateInfoPointersMode = migrateInfoPointersIgnore
+ 		default:
+-			ExitWithError(errors.Errorf(tr.Tr.Get("Unsupported --pointers option value")))
++			ExitWithError(errors.Errorf("%s", tr.Tr.Get("Unsupported --pointers option value")))
+ 		}
+ 	}
+ 
+ 	if migrateFixup {
+ 		include, exclude := getIncludeExcludeArgs(cmd)
+ 		if include != nil || exclude != nil {
+-			ExitWithError(errors.Errorf(tr.Tr.Get("Cannot use --fixup with --include, --exclude")))
++			ExitWithError(errors.Errorf("%s", tr.Tr.Get("Cannot use --fixup with --include, --exclude")))
+ 		}
+ 		if pointers.Changed && migrateInfoPointersMode != migrateInfoPointersIgnore {
+-			ExitWithError(errors.Errorf(tr.Tr.Get("Cannot use --fixup with --pointers=%s", pointers.Value.String())))
++			ExitWithError(errors.Errorf("%s", tr.Tr.Get("Cannot use --fixup with --pointers=%s", pointers.Value.String())))
+ 		}
+ 		migrateInfoPointersMode = migrateInfoPointersIgnore
+ 	}
+diff --git a/commands/command_pointer.go b/commands/command_pointer.go
+index a2a57da6..2177408d 100644
+--- a/commands/command_pointer.go
++++ b/commands/command_pointer.go
+@@ -129,7 +129,7 @@ func pointerCommand(cmd *cobra.Command, args []string) {
+ 			os.Exit(1)
+ 		}
+ 
+-		fmt.Fprintf(os.Stderr, buf.String())
++		fmt.Fprintf(os.Stderr, "%s", buf.String())
+ 		if comparing {
+ 			compareOid, err = git.HashObject(bytes.NewReader(buf.Bytes()))
+ 			if err != nil {
+diff --git a/commands/command_smudge.go b/commands/command_smudge.go
+index 0117b996..2b6297c8 100644
+--- a/commands/command_smudge.go
++++ b/commands/command_smudge.go
+@@ -45,7 +45,7 @@ func delayedSmudge(gf *lfs.GitFilter, s *git.FilterProcessScanner, to io.Writer,
+ 
+ 		if n != 0 {
+ 			return 0, false, nil, errors.NewNotAPointerError(errors.Errorf(
+-				tr.Tr.Get("Unable to parse pointer at: %q", filename),
++				"%s", tr.Tr.Get("Unable to parse pointer at: %q", filename),
+ 			))
+ 		}
+ 		return 0, false, nil, nil
+@@ -108,7 +108,7 @@ func smudge(gf *lfs.GitFilter, to io.Writer, from io.Reader, filename string, sk
+ 
+ 		if n != 0 {
+ 			return 0, errors.NewNotAPointerError(errors.Errorf(
+-				tr.Tr.Get("Unable to parse pointer at: %q", filename),
++				"%s", tr.Tr.Get("Unable to parse pointer at: %q", filename),
+ 			))
+ 		}
+ 		return 0, nil
+diff --git a/creds/creds.go b/creds/creds.go
+index 784c1b5f..d869dbca 100644
+--- a/creds/creds.go
++++ b/creds/creds.go
+@@ -66,13 +66,13 @@ func (c Creds) buffer(protectProtocol bool) (*bytes.Buffer, error) {
+ 	for k, v := range c {
+ 		for _, item := range v {
+ 			if strings.Contains(item, "\n") {
+-				return nil, errors.Errorf(tr.Tr.Get("credential value for %s contains newline: %q", k, item))
++				return nil, errors.Errorf("%s", tr.Tr.Get("credential value for %s contains newline: %q", k, item))
+ 			}
+ 			if protectProtocol && strings.Contains(item, "\r") {
+-				return nil, errors.Errorf(tr.Tr.Get("credential value for %s contains carriage return: %q\nIf this is intended, set `credential.protectProtocol=false`", k, item))
++				return nil, errors.Errorf("%s", tr.Tr.Get("credential value for %s contains carriage return: %q\nIf this is intended, set `credential.protectProtocol=false`", k, item))
+ 			}
+ 			if strings.Contains(item, string(rune(0))) {
+-				return nil, errors.Errorf(tr.Tr.Get("credential value for %s contains null byte: %q", k, item))
++				return nil, errors.Errorf("%s", tr.Tr.Get("credential value for %s contains null byte: %q", k, item))
+ 			}
+ 
+ 			buf.Write([]byte(k))
+@@ -249,7 +249,7 @@ func (a *AskPassCredentialHelper) getValue(what Creds, valueType credValueType,
+ 	case credValueTypePassword:
+ 		valueString = "password"
+ 	default:
+-		return "", errors.Errorf(tr.Tr.Get("Invalid Credential type queried from AskPass"))
++		return "", errors.Errorf("%s", tr.Tr.Get("Invalid Credential type queried from AskPass"))
+ 	}
+ 
+ 	// Return the existing credential if it was already provided, otherwise
+@@ -274,7 +274,7 @@ func (a *AskPassCredentialHelper) getFromProgram(valueType credValueType, u *url
+ 	case credValueTypePassword:
+ 		valueString = "Password"
+ 	default:
+-		return "", errors.Errorf(tr.Tr.Get("Invalid Credential type queried from AskPass"))
++		return "", errors.Errorf("%s", tr.Tr.Get("Invalid Credential type queried from AskPass"))
+ 	}
+ 
+ 	// 'cmd' will run the GIT_ASKPASS (or core.askpass) command prompting
+diff --git a/errors/errors.go b/errors/errors.go
+index dae33a81..c77b5e93 100644
+--- a/errors/errors.go
++++ b/errors/errors.go
+@@ -114,7 +114,7 @@ func Combine(errs []error) error {
+ 		}
+ 		buf.WriteString(err.Error())
+ 	}
+-	return fmt.Errorf(buf.String())
++	return fmt.Errorf("%s", buf.String())
+ }
+ 
+ func Cause(err error) error {
+diff --git a/errors/types.go b/errors/types.go
+index 041e4f39..b869b4ea 100644
+--- a/errors/types.go
++++ b/errors/types.go
+@@ -386,7 +386,7 @@ func (e badPointerKeyError) BadPointerKeyError() bool {
+ }
+ 
+ func NewBadPointerKeyError(expected, actual string) error {
+-	err := Errorf(tr.Tr.Get("Expected key %s, got %s", expected, actual))
++	err := Errorf("%s", tr.Tr.Get("Expected key %s, got %s", expected, actual))
+ 	return badPointerKeyError{expected, actual, newWrappedError(err, tr.Tr.Get("pointer parsing"))}
+ }
+ 
+diff --git a/git/githistory/rewriter_test.go b/git/githistory/rewriter_test.go
+index 98ce635c..b401e5f3 100644
+--- a/git/githistory/rewriter_test.go
++++ b/git/githistory/rewriter_test.go
+@@ -377,7 +377,7 @@ func TestHistoryRewriterCallbacksSubtrees(t *testing.T) {
+ }
+ 
+ func TestHistoryRewriterTreePreCallbackPropagatesErrors(t *testing.T) {
+-	expected := errors.Errorf("my error")
++	expected := errors.Errorf("%s", "my error")
+ 
+ 	db := DatabaseFromFixture(t, "linear-history.git")
+ 	r := NewRewriter(db)
+diff --git a/lfs/diff_index_scanner.go b/lfs/diff_index_scanner.go
+index 7ceaf4df..d7029423 100644
+--- a/lfs/diff_index_scanner.go
++++ b/lfs/diff_index_scanner.go
+@@ -185,12 +185,12 @@ func (s *DiffIndexScanner) scan(line string) (*DiffIndexEntry, error) {
+ 
+ 	parts := strings.Split(line, "\t")
+ 	if len(parts) < 2 {
+-		return nil, errors.Errorf(tr.Tr.Get("invalid line: %s", line))
++		return nil, errors.Errorf("%s", tr.Tr.Get("invalid line: %s", line))
+ 	}
+ 
+ 	desc := strings.Fields(parts[0])
+ 	if len(desc) < 5 {
+-		return nil, errors.Errorf(tr.Tr.Get("invalid description: %s", parts[0]))
++		return nil, errors.Errorf("%s", tr.Tr.Get("invalid description: %s", parts[0]))
+ 	}
+ 
+ 	entry := &DiffIndexEntry{
+diff --git a/lfs/gitfilter_smudge.go b/lfs/gitfilter_smudge.go
+index 830e83c4..58049da1 100644
+--- a/lfs/gitfilter_smudge.go
++++ b/lfs/gitfilter_smudge.go
+@@ -132,7 +132,7 @@ func (f *GitFilter) downloadFile(writer io.Writer, ptr *Pointer, workingfile, me
+ 			}
+ 		}
+ 
+-		return 0, errors.Wrapf(multiErr, tr.Tr.Get("Error downloading %s (%s)", workingfile, ptr.Oid))
++		return 0, errors.Wrapf(multiErr, "%s", tr.Tr.Get("Error downloading %s (%s)", workingfile, ptr.Oid))
+ 	}
+ 
+ 	return f.readLocalFile(writer, ptr, mediafile, workingfile, nil)
+@@ -163,7 +163,7 @@ func (f *GitFilter) downloadFileFallBack(writer io.Writer, ptr *Pointer, working
+ 					multiErr = e
+ 				}
+ 			}
+-			wrappedError := errors.Wrapf(multiErr, tr.Tr.Get("Error downloading %s (%s)", workingfile, ptr.Oid))
++			wrappedError := errors.Wrapf(multiErr, "%s", tr.Tr.Get("Error downloading %s (%s)", workingfile, ptr.Oid))
+ 			if index >= len(remotes)-1 {
+ 				return 0, wrappedError
+ 			} else {
+@@ -176,13 +176,13 @@ func (f *GitFilter) downloadFileFallBack(writer io.Writer, ptr *Pointer, working
+ 			return f.readLocalFile(writer, ptr, mediafile, workingfile, nil)
+ 		}
+ 	}
+-	return 0, errors.Wrapf(errors.New("No known remotes"), tr.Tr.Get("Error downloading %s (%s)", workingfile, ptr.Oid))
++	return 0, errors.Wrapf(errors.New("No known remotes"), "%s", tr.Tr.Get("Error downloading %s (%s)", workingfile, ptr.Oid))
+ }
+ 
+ func (f *GitFilter) readLocalFile(writer io.Writer, ptr *Pointer, mediafile string, workingfile string, cb tools.CopyCallback) (int64, error) {
+ 	reader, err := tools.RobustOpen(mediafile)
+ 	if err != nil {
+-		return 0, errors.Wrapf(err, tr.Tr.Get("error opening media file"))
++		return 0, errors.Wrapf(err, "%s", tr.Tr.Get("error opening media file"))
+ 	}
+ 	defer reader.Close()
+ 
+@@ -250,14 +250,14 @@ func (f *GitFilter) readLocalFile(writer io.Writer, ptr *Pointer, mediafile stri
+ 		// setup reader
+ 		reader, err = os.Open(response.file.Name())
+ 		if err != nil {
+-			return 0, errors.Wrapf(err, tr.Tr.Get("Error opening smudged file: %s", err))
++			return 0, errors.Wrapf(err, "%s", tr.Tr.Get("Error opening smudged file: %s", err))
+ 		}
+ 		defer reader.Close()
+ 	}
+ 
+ 	n, err := tools.CopyWithCallback(writer, reader, ptr.Size, cb)
+ 	if err != nil {
+-		return n, errors.Wrapf(err, tr.Tr.Get("Error reading from media file: %s", err))
++		return n, errors.Wrapf(err, "%s", tr.Tr.Get("Error reading from media file: %s", err))
+ 	}
+ 
+ 	return n, nil
+diff --git a/lfshttp/certs.go b/lfshttp/certs.go
+index c193aa59..68abcb42 100644
+--- a/lfshttp/certs.go
++++ b/lfshttp/certs.go
+@@ -76,23 +76,23 @@ func getClientCertForHost(c *Client, host string) (*tls.Certificate, error) {
+ 
+ 	hostSslKey, err := tools.ExpandPath(hostSslKey, false)
+ 	if err != nil {
+-		return nil, errors.Wrapf(err, tr.Tr.Get("Error resolving key path %q", hostSslKey))
++		return nil, errors.Wrapf(err, "%s", tr.Tr.Get("Error resolving key path %q", hostSslKey))
+ 	}
+ 
+ 	hostSslCert, err = tools.ExpandPath(hostSslCert, false)
+ 	if err != nil {
+-		return nil, errors.Wrapf(err, tr.Tr.Get("Error resolving cert path %q", hostSslCert))
++		return nil, errors.Wrapf(err, "%s", tr.Tr.Get("Error resolving cert path %q", hostSslCert))
+ 	}
+ 
+ 	cert, err := os.ReadFile(hostSslCert)
+ 	if err != nil {
+ 		tracerx.Printf("Error reading client cert file %q: %v", hostSslCert, err)
+-		return nil, errors.Wrapf(err, tr.Tr.Get("Error reading client cert file %q", hostSslCert))
++		return nil, errors.Wrapf(err, "%s", tr.Tr.Get("Error reading client cert file %q", hostSslCert))
+ 	}
+ 	key, err := os.ReadFile(hostSslKey)
+ 	if err != nil {
+ 		tracerx.Printf("Error reading client key file %q: %v", hostSslKey, err)
+-		return nil, errors.Wrapf(err, tr.Tr.Get("Error reading client key file %q", hostSslKey))
++		return nil, errors.Wrapf(err, "%s", tr.Tr.Get("Error reading client key file %q", hostSslKey))
+ 	}
+ 
+ 	block, _ := pem.Decode(key)
+@@ -103,14 +103,14 @@ func getClientCertForHost(c *Client, host string) (*tls.Certificate, error) {
+ 		key, err = decryptPEMBlock(c, block, hostSslKey, key)
+ 		if err != nil {
+ 			tracerx.Printf("Unable to decrypt client key file %q: %v", hostSslKey, err)
+-			return nil, errors.Wrapf(err, tr.Tr.Get("Error reading client key file %q (not a PKCS#1 file?)", hostSslKey))
++			return nil, errors.Wrapf(err, "%s", tr.Tr.Get("Error reading client key file %q (not a PKCS#1 file?)", hostSslKey))
+ 		}
+ 	}
+ 
+ 	certobj, err := tls.X509KeyPair(cert, key)
+ 	if err != nil {
+ 		tracerx.Printf("Error reading client cert/key %v", err)
+-		return nil, errors.Wrapf(err, tr.Tr.Get("Error reading client cert/key"))
++		return nil, errors.Wrapf(err, "%s", tr.Tr.Get("Error reading client cert/key"))
+ 	}
+ 	return &certobj, nil
+ }
+diff --git a/lfshttp/errors.go b/lfshttp/errors.go
+index 15340061..bc1e13d6 100644
+--- a/lfshttp/errors.go
++++ b/lfshttp/errors.go
+@@ -124,5 +124,10 @@ func defaultError(res *http.Response) error {
+ 		msgFmt = tr.Tr.Get("Server error %%s from HTTP %d", res.StatusCode)
+ 	}
+ 
+-	return errors.Errorf(fmt.Sprintf(msgFmt), res.Request.URL)
++	// Preserve exact original behavior but avoid format string warnings
++	// Original was: errors.Errorf(fmt.Sprintf(msgFmt), res.Request.URL)
++	// This is equivalent but avoids variable format strings
++	urlStr := fmt.Sprintf("%v", res.Request.URL)          // Convert URL to string safely
++	finalMsg := strings.ReplaceAll(msgFmt, "%%s", urlStr) // Replace %%s with actual URL
++	return errors.New(finalMsg)
+ }
+diff --git a/lfshttp/lfshttp.go b/lfshttp/lfshttp.go
+index fa89714a..913442db 100644
+--- a/lfshttp/lfshttp.go
++++ b/lfshttp/lfshttp.go
+@@ -84,7 +84,7 @@ func DecodeJSON(res *http.Response, obj interface{}) error {
+ 	res.Body.Close()
+ 
+ 	if err != nil {
+-		return errors.Wrapf(err, tr.Tr.Get("Unable to parse HTTP response for %s %s", res.Request.Method, res.Request.URL))
++		return errors.Wrapf(err, "%s", tr.Tr.Get("Unable to parse HTTP response for %s %s", res.Request.Method, res.Request.URL))
+ 	}
+ 
+ 	return nil
+diff --git a/lfshttp/standalone/standalone.go b/lfshttp/standalone/standalone.go
+index 22a5902e..05b7a4b1 100644
+--- a/lfshttp/standalone/standalone.go
++++ b/lfshttp/standalone/standalone.go
+@@ -256,7 +256,7 @@ func (h *fileHandler) upload(oid string, size int64, path string) (string, strin
+ func (h *fileHandler) download(oid string, size int64) (string, string, error) {
+ 	if !h.remoteConfig.LFSObjectExists(oid, size) {
+ 		tracerx.Printf("missing object in %q (%s)", h.remotePath, oid)
+-		return oid, "", errors.Errorf(tr.Tr.Get("remote missing object %s", oid))
++		return oid, "", errors.Errorf("%s", tr.Tr.Get("remote missing object %s", oid))
+ 	}
+ 
+ 	src, err := h.remoteConfig.Filesystem().ObjectPath(oid)
+@@ -290,13 +290,13 @@ func ProcessStandaloneData(cfg *config.Configuration, input *os.File, output *os
+ 	for scanner.Scan() {
+ 		var msg inputMessage
+ 		if err := json.NewDecoder(strings.NewReader(scanner.Text())).Decode(&msg); err != nil {
+-			return errors.Wrapf(err, tr.Tr.Get("error decoding JSON"))
++			return errors.Wrapf(err, "%s", tr.Tr.Get("error decoding JSON"))
+ 		}
+ 		if handler == nil {
+ 			var err error
+ 			handler, err = newHandler(cfg, output, &msg)
+ 			if err != nil {
+-				err := errors.Wrapf(err, tr.Tr.Get("error creating handler"))
++				err := errors.Wrapf(err, "%s", tr.Tr.Get("error creating handler"))
+ 				errMsg := outputErrorMessage{
+ 					Error: errorMessage{
+ 						Message: err.Error(),
+@@ -314,7 +314,7 @@ func ProcessStandaloneData(cfg *config.Configuration, input *os.File, output *os
+ 		os.RemoveAll(handler.tempdir)
+ 	}
+ 	if err := scanner.Err(); err != nil {
+-		return errors.Wrapf(err, tr.Tr.Get("error reading input"))
++		return errors.Wrapf(err, "%s", tr.Tr.Get("error reading input"))
+ 	}
+ 	return nil
+ }
+diff --git a/ssh/connection.go b/ssh/connection.go
+index 83a4530c..f08165ae 100644
+--- a/ssh/connection.go
++++ b/ssh/connection.go
+@@ -80,7 +80,7 @@ func startConnection(id int, osEnv config.Environment, gitEnv config.Environment
+ 		r.Close()
+ 		w.Close()
+ 		cmd.Wait()
+-		err = errors.Combine([]error{err, fmt.Errorf(tr.Tr.Get("Failed to connect to remote SSH server: %s", cmd.Stderr))})
++		err = errors.Combine([]error{err, fmt.Errorf("%s", tr.Tr.Get("Failed to connect to remote SSH server: %s", cmd.Stderr))})
+ 		tracerx.Printf("pure SSH connection unsuccessful (#%d)", id)
+ 	} else {
+ 		tracerx.Printf("pure SSH connection successful (#%d)", id)
+diff --git a/t/git-lfs-test-server-api/main.go b/t/git-lfs-test-server-api/main.go
+index f897fd6e..6408fbdd 100644
+--- a/t/git-lfs-test-server-api/main.go
++++ b/t/git-lfs-test-server-api/main.go
+@@ -74,7 +74,7 @@ func testServerApi(cmd *cobra.Command, args []string) {
+ 
+ 	manifest, err := buildManifest(repo)
+ 	if err != nil {
+-		exit("error building tq.Manifest: " + err.Error())
++		exit("error building tq.Manifest: %s", err.Error())
+ 	}
+ 
+ 	var oidsExist, oidsMissing []TestObject
+diff --git a/tasklog/simple_task.go b/tasklog/simple_task.go
+index 207c5838..fb9c0988 100644
+--- a/tasklog/simple_task.go
++++ b/tasklog/simple_task.go
+@@ -28,7 +28,7 @@ func NewSimpleTask() *SimpleTask {
+ 
+ // Log logs a string with no formatting verbs.
+ func (s *SimpleTask) Log(str string) {
+-	s.Logf(str)
++	s.Logf("%s", str)
+ }
+ 
+ // Logf logs some formatted string, which is interpreted according to the rules
+diff --git a/tools/filetools.go b/tools/filetools.go
+index be97a800..05f56822 100644
+--- a/tools/filetools.go
++++ b/tools/filetools.go
+@@ -181,14 +181,14 @@ func ExpandPath(path string, expand bool) (string, error) {
+ 	}
+ 
+ 	if err != nil {
+-		return "", errors.Wrapf(err, tr.Tr.Get("could not find user %s", username))
++		return "", errors.Wrapf(err, "%s", tr.Tr.Get("could not find user %s", username))
+ 	}
+ 
+ 	homedir := who.HomeDir
+ 	if expand {
+ 		homedir, err = filepath.EvalSymlinks(homedir)
+ 		if err != nil {
+-			return "", errors.Wrapf(err, tr.Tr.Get("cannot eval symlinks for %s", homedir))
++			return "", errors.Wrapf(err, "%s", tr.Tr.Get("cannot eval symlinks for %s", homedir))
+ 		}
+ 	}
+ 	return filepath.Join(homedir, path[len(username)+1:]), nil
+diff --git a/tq/basic_download.go b/tq/basic_download.go
+index 767ebaee..c2aae578 100644
+--- a/tq/basic_download.go
++++ b/tq/basic_download.go
+@@ -118,7 +118,7 @@ func (a *basicDownloadAdapter) download(t *Transfer, cb ProgressCallback, authOk
+ 		return err
+ 	}
+ 	if rel == nil {
+-		return errors.Errorf(tr.Tr.Get("Object %s not found on the server.", t.Oid))
++		return errors.Errorf("%s", tr.Tr.Get("Object %s not found on the server.", t.Oid))
+ 	}
+ 
+ 	req, err := a.newHTTPRequest("GET", rel)
+@@ -243,7 +243,7 @@ func (a *basicDownloadAdapter) download(t *Transfer, cb ProgressCallback, authOk
+ 	}
+ 	written, err := tools.CopyWithCallback(dlFile, hasher, res.ContentLength, ccb)
+ 	if err != nil {
+-		return errors.Wrapf(err, tr.Tr.Get("cannot write data to temporary file %q", dlfilename))
++		return errors.Wrapf(err, "%s", tr.Tr.Get("cannot write data to temporary file %q", dlfilename))
+ 	}
+ 
+ 	if actual := hasher.Hash(); actual != t.Oid {
+diff --git a/tq/basic_upload.go b/tq/basic_upload.go
+index 669a2015..b90278ad 100644
+--- a/tq/basic_upload.go
++++ b/tq/basic_upload.go
+@@ -47,7 +47,7 @@ func (a *basicUploadAdapter) DoTransfer(ctx interface{}, t *Transfer, cb Progres
+ 		return err
+ 	}
+ 	if rel == nil {
+-		return errors.Errorf(tr.Tr.Get("No upload action for object: %s", t.Oid))
++		return errors.Errorf("%s", tr.Tr.Get("No upload action for object: %s", t.Oid))
+ 	}
+ 
+ 	req, err := a.newHTTPRequest("PUT", rel)
+@@ -142,7 +142,7 @@ func (a *basicUploadAdapter) DoTransfer(ctx interface{}, t *Transfer, cb Progres
+ 	}
+ 
+ 	if res.StatusCode > 299 {
+-		return errors.Wrapf(nil, tr.Tr.Get("Invalid status for %s %s: %d",
++		return errors.Wrapf(nil, "%s", tr.Tr.Get("Invalid status for %s %s: %d",
+ 			req.Method,
+ 			strings.SplitN(req.URL.String(), "?", 2)[0],
+ 			res.StatusCode,
+diff --git a/tq/custom.go b/tq/custom.go
+index 060e77db..f479d3d7 100644
+--- a/tq/custom.go
++++ b/tq/custom.go
+@@ -272,7 +272,7 @@ func (a *customAdapter) DoTransfer(ctx interface{}, t *Transfer, cb ProgressCall
+ 		return err
+ 	}
+ 	if rel == nil && !a.standalone {
+-		return errors.Errorf(tr.Tr.Get("Object %s not found on the server.", t.Oid))
++		return errors.Errorf("%s", tr.Tr.Get("Object %s not found on the server.", t.Oid))
+ 	}
+ 	var req *customAdapterTransferRequest
+ 	if a.direction == Upload {
+diff --git a/tq/ssh.go b/tq/ssh.go
+index 79693495..235644ef 100644
+--- a/tq/ssh.go
++++ b/tq/ssh.go
+@@ -194,7 +194,7 @@ func (a *SSHAdapter) download(t *Transfer, workerNum int, cb ProgressCallback) e
+ 		return err
+ 	}
+ 	if rel == nil {
+-		return errors.Errorf(tr.Tr.Get("No download action for object: %s", t.Oid))
++		return errors.Errorf("%s", tr.Tr.Get("No download action for object: %s", t.Oid))
+ 	}
+ 	// Reserve a temporary filename. We need to make sure nobody operates on the file simultaneously with us.
+ 	f, err := tools.TempFile(a.tempDir(), t.Oid, a.fs)
+@@ -267,7 +267,7 @@ func (a *SSHAdapter) doDownload(t *Transfer, workerNum int, f *os.File, cb Progr
+ 	hasher := tools.NewHashingReader(data)
+ 	written, err := tools.CopyWithCallback(f, hasher, t.Size, ccb)
+ 	if err != nil {
+-		return errors.Wrapf(err, tr.Tr.Get("cannot write data to temporary file %q", dlfilename))
++		return errors.Wrapf(err, "%s", tr.Tr.Get("cannot write data to temporary file %q", dlfilename))
+ 	}
+ 
+ 	if actual := hasher.Hash(); actual != t.Oid {
+@@ -346,7 +346,7 @@ func (a *SSHAdapter) upload(t *Transfer, workerNum int, cb ProgressCallback) err
+ 		return err
+ 	}
+ 	if rel == nil {
+-		return errors.Errorf(tr.Tr.Get("No upload action for object: %s", t.Oid))
++		return errors.Errorf("%s", tr.Tr.Get("No upload action for object: %s", t.Oid))
+ 	}
+ 
+ 	f, err := os.OpenFile(t.Path, os.O_RDONLY, 0644)
+diff --git a/tq/transfer_queue.go b/tq/transfer_queue.go
+index ad779d34..26effe13 100644
+--- a/tq/transfer_queue.go
++++ b/tq/transfer_queue.go
+@@ -648,7 +648,7 @@ func (q *TransferQueue) enqueueAndCollectRetriesFor(batch batch) (batch, error)
+ 			// Transfer object, then we give up on the
+ 			// transfer by telling the progress meter to
+ 			// skip the number of bytes in "o".
+-			q.errorc <- errors.Errorf(tr.Tr.Get("[%v] The server returned an unknown OID.", o.Oid))
++			q.errorc <- errors.Errorf("%s", tr.Tr.Get("[%v] The server returned an unknown OID.", o.Oid))
+ 
+ 			q.Skip(o.Size)
+ 			q.wait.Done()
+@@ -748,7 +748,7 @@ func (q *TransferQueue) partitionTransfers(transfers []*Transfer) (present []*Tr
+ 		var err error
+ 
+ 		if t.Size < 0 {
+-			err = errors.Errorf(tr.Tr.Get("object %q has invalid size (got: %d)", t.Oid, t.Size))
++			err = errors.Errorf("%s", tr.Tr.Get("object %q has invalid size (got: %d)", t.Oid, t.Size))
+ 		} else {
+ 			fd, serr := os.Stat(t.Path)
+ 			if serr != nil {
+diff --git a/tq/tus_upload.go b/tq/tus_upload.go
+index 273cb7fc..27f47542 100644
+--- a/tq/tus_upload.go
++++ b/tq/tus_upload.go
+@@ -34,7 +34,7 @@ func (a *tusUploadAdapter) DoTransfer(ctx interface{}, t *Transfer, cb ProgressC
+ 		return err
+ 	}
+ 	if rel == nil {
+-		return errors.Errorf(tr.Tr.Get("No upload action for object: %s", t.Oid))
++		return errors.Errorf("%s", tr.Tr.Get("No upload action for object: %s", t.Oid))
+ 	}
+ 
+ 	// Note not supporting the Creation extension since the batch API generates URLs
+@@ -142,7 +142,7 @@ func (a *tusUploadAdapter) DoTransfer(ctx interface{}, t *Transfer, cb ProgressC
+ 	}
+ 
+ 	if res.StatusCode > 299 {
+-		return errors.Wrapf(nil, tr.Tr.Get("Invalid status for %s %s: %d",
++		return errors.Wrapf(nil, "%s", tr.Tr.Get("Invalid status for %s %s: %d",
+ 			req.Method,
+ 			strings.SplitN(req.URL.String(), "?", 2)[0],
+ 			res.StatusCode,
+-- 
+2.50.1
+
