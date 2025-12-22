@@ -9,7 +9,7 @@ Version:                3.6.1
 %global gobuilddir %{_builddir}/%{name}-%{version}/_build
 
 Name:           git-lfs
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Git extension for versioning large files
 
 License:        MIT
@@ -21,6 +21,15 @@ Source1:        README.Fedora
 # Based on https://github.com/git-lfs/git-lfs/pull/5998
 # Added logic that preserves original behavior of error messages and avoids the format string test failures
 Patch0:         0001-Use-constant-format-string.patch
+# Fixes CVE-2025-26625
+# Backports all the commits from:
+# https://github.com/git-lfs/git-lfs/compare/v3.7.0...v3.7.1
+# With added test functions from:
+# 91fc2280b5ea0c75d178c9fe289b428615c4f5f0
+# 3d8f497ea50ef550d15907bcc91868e608e56c14
+# And changes from:
+# b490f91cfe5c53e67753feec18d62958decd3be9
+Patch1:         git-lfs-3.6.1-cve-2025-26625.patch
 
 # Generated provides by vendor2provides.py
 # https://src.fedoraproject.org/rpms/syncthing/blob/603e4e03a92a7d704d199629dd85304018e8279d/f/vendor2provides.py
@@ -160,6 +169,10 @@ PATH=%{buildroot}%{_bindir}:%{gobuilddir}/bin:$PATH \
 
 
 %changelog
+* Mon Dec 01 2025 Ondřej Pohořelský <opohorel@redhat.com> - 3.6.1-4
+- Backport fix for CVE-2025-26625
+- Resolves: RHEL-122431
+
 * Mon Aug 11 2025 Ondřej Pohořelský <opohorel@redhat.com> - 3.6.1-3
 - Add patch to fix build failures with Go 1.24<
 - Resolves: RHEL-106475
