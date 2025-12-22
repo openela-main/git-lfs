@@ -19,7 +19,7 @@ Version:                3.4.1
 %global gobuild CGO_CPPFLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-all" go build -compiler gc -buildmode pie '-tags=rpm_crashtraceback libtrust_openssl ' -ldflags "-linkmode=external -compressdwarf=false ${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -extldflags '%__global_ldflags'" -a -v -x %{?**}
 
 Name:           git-lfs
-Release:        5%{?dist}
+Release:        6%{?dist}
 Summary:        Git extension for versioning large files
 
 License:        MIT
@@ -33,7 +33,13 @@ Source2:        gen-manpages.sh
 # Backports 268628b, 4423696, 0345b6f and f6904cc that resolves the CVE-2024-53263
 # Aditionally backports b326b63
 # Commits had to be adapted as git-lfs-3.4.1 doesn't support multistage authentication
-Patch:          git-lfs-3.4.1-cve-2024-53263.patch
+Patch1:          git-lfs-3.4.1-cve-2024-53263.patch
+# Fixes CVE-2025-26625
+# Backports all the commits from:
+# https://github.com/git-lfs/git-lfs/compare/v3.7.0...v3.7.1
+# And additional commits to support the fix
+# Some tests had to be skipped as they require features not present in v3.4.1. and always fail
+Patch2:          git-lfs-3.4.1-cve-2025-26625.patch
 
 # Generated provides by vendor2provides.py
 # https://src.fedoraproject.org/rpms/syncthing/blob/603e4e03a92a7d704d199629dd85304018e8279d/f/vendor2provides.py
@@ -175,6 +181,10 @@ PATH=%{buildroot}%{_bindir}:%{gobuilddir}/bin:$PATH \
 
 
 %changelog
+* Thu Dec 04 2025 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-6
+- Backport CVE-2025-26625 fixes
+- Resolves: RHEL-122423
+
 * Tue Jun 10 2025 Ondřej Pohořelský <opohorel@redhat.com> - 3.4.1-5
 - Rebuild with new Golang
 - Resolves: RHEL-89264
