@@ -9,7 +9,7 @@ Version:                3.6.1
 %global gobuilddir %{_builddir}/%{name}-%{version}/_build
 
 Name:           git-lfs
-Release:        8%{?dist}
+Release:        8%{?dist}.1
 Summary:        Git extension for versioning large files
 
 License:        MIT
@@ -169,6 +169,10 @@ PATH=%{buildroot}%{_bindir}:%{gobuilddir}/bin:$PATH \
 
 
 %changelog
+* Fri Apr 24 2026 RHEL Packaging Agent <jotnar@redhat.com> - 3.6.1-8.1
+- Rebuild with new Golang
+- Resolves: RHEL-167659, RHEL-170836, RHEL-166651
+
 * Fri Mar 27 2026 Ondřej Pohořelský <opohorel@redhat.com> - 3.6.1-8
 - Rebuild with new Golang
 - Resolves: RHEL-158724
