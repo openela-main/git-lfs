@@ -9,13 +9,16 @@ Version:                3.7.1
 %global gobuilddir %{_builddir}/%{name}-%{version}/_build
 
 Name:           git-lfs
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Git extension for versioning large files
 
 License:        MIT
 URL:            https://git-lfs.github.io/
 Source0:        https://github.com/%{name}/%{name}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
 Source1:        README.Fedora
+
+# https://github.com/git-lfs/git-lfs/pull/6237
+Patch0:         0001-commands-fix-format-string-type-mismatch-in-lockveri.patch
 
 # Generated provides by vendor2provides.py
 # https://src.fedoraproject.org/rpms/syncthing/blob/603e4e03a92a7d704d199629dd85304018e8279d/f/vendor2provides.py
@@ -156,6 +159,10 @@ PATH=%{buildroot}%{_bindir}:%{gobuilddir}/bin:$PATH \
 
 
 %changelog
+* Wed Apr 08 2026 Ondřej Pohořelský <opohorel@redhat.com> - 3.7.1-4
+- Rebuild with new Golang
+- Resolves: RHEL-158765, RHEL-166675, RHEL-167677, RHEL-170838
+
 * Mon Feb 16 2026 Ondřej Pohořelský <opohorel@redhat.com> - 3.7.1-3
 - Rebuild with new Golang
 - Resolves: RHEL-146102, RHEL-149638
