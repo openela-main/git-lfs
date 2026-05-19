@@ -1,0 +1,29 @@
+From b1620879b0e615e03c1e89aeafc33940a0ed4ba3 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ond=C5=99ej=20Poho=C5=99elsk=C3=BD?= <opohorel@redhat.com>
+Date: Thu, 9 Apr 2026 11:03:37 +0200
+Subject: [PATCH] commands: fix format string type mismatch in lockverifier
+
+The addLocks() method passes a *git.Ref value to a %q format verb in
+a tr.Tr.Get() call, but %q expects a string. Newer versions of Go
+recognize tr.Tr.Get() as a printf-like function and flag this as an
+error during go vet.
+
+Pass ref.Refspec() instead, which returns the reference name as a
+string.
+---
+ commands/lockverifier.go | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/commands/lockverifier.go b/commands/lockverifier.go
+index d7d2d38682..96301937cc 100644
+--- a/commands/lockverifier.go
++++ b/commands/lockverifier.go
+@@ -90,7 +90,7 @@ func (lv *lockVerifier) addLocks(ref *git.Ref, locks []locking.Lock, set map[str
+ 	for _, l := range locks {
+ 		if rl, ok := set[l.Path]; ok {
+ 			if err := rl.Add(ref, l); err != nil {
+-				Error(tr.Tr.Get("warning: error adding %q lock for ref %q: %+v", l.Path, ref, err))
++				Error(tr.Tr.Get("warning: error adding %q lock for ref %q: %+v", l.Path, ref.Refspec(), err))
+ 			}
+ 		} else {
+ 			set[l.Path] = lv.newRefLocks(ref, l)
