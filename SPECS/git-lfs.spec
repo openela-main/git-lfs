@@ -2,34 +2,20 @@
 
 # https://github.com/git-lfs/git-lfs
 %global goipath         github.com/git-lfs/git-lfs/v3
-Version:                3.6.1
+Version:                3.7.1
 
 %gometa
 
 %global gobuilddir %{_builddir}/%{name}-%{version}/_build
 
 Name:           git-lfs
-Release:        8%{?dist}.1
+Release:        3%{?dist}
 Summary:        Git extension for versioning large files
 
 License:        MIT
 URL:            https://git-lfs.github.io/
 Source0:        https://github.com/%{name}/%{name}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
 Source1:        README.Fedora
-
-# Without this patch, Git-LFS fails to build with Go 1.24<
-# Based on https://github.com/git-lfs/git-lfs/pull/5998
-# Added logic that preserves original behavior of error messages and avoids the format string test failures
-Patch0:         0001-Use-constant-format-string.patch
-# Fixes CVE-2025-26625
-# Backports all the commits from:
-# https://github.com/git-lfs/git-lfs/compare/v3.7.0...v3.7.1
-# With added test functions from:
-# 91fc2280b5ea0c75d178c9fe289b428615c4f5f0
-# 3d8f497ea50ef550d15907bcc91868e608e56c14
-# And changes from:
-# b490f91cfe5c53e67753feec18d62958decd3be9
-Patch1:         git-lfs-3.6.1-cve-2025-26625.patch
 
 # Generated provides by vendor2provides.py
 # https://src.fedoraproject.org/rpms/syncthing/blob/603e4e03a92a7d704d199629dd85304018e8279d/f/vendor2provides.py
@@ -38,9 +24,10 @@ Provides:       bundled(golang(github.com/avast/retry-go)) = 2.4.2+incompatible
 Provides:       bundled(golang(github.com/davecgh/go-spew)) = 1.1.1
 Provides:       bundled(golang(github.com/dpotapov/go-spnego)) = 298b63a
 Provides:       bundled(golang(github.com/git-lfs/gitobj/v2)) = 2.1.1
-Provides:       bundled(golang(github.com/git-lfs/go-netrc)) = f0c862d
+Provides:       bundled(golang(github.com/git-lfs/go-netrc)) = ba0029b
 Provides:       bundled(golang(github.com/git-lfs/pktline)) = 06e9096
 Provides:       bundled(golang(github.com/git-lfs/wildmatch/v2)) = 2.0.1
+Provides:       bundled(golang(github.com/golang/groupcache)) = 2c02b82
 Provides:       bundled(golang(github.com/hashicorp/go-uuid)) = 1.0.2
 Provides:       bundled(golang(github.com/inconshreveable/mousetrap)) = 1.1.0
 Provides:       bundled(golang(github.com/jcmturner/aescts/v2)) = 2.0.0
@@ -63,11 +50,11 @@ Provides:       bundled(golang(github.com/stretchr/testify)) = 1.6.1
 Provides:       bundled(golang(github.com/xeipuuv/gojsonpointer)) = 4e3ac27
 Provides:       bundled(golang(github.com/xeipuuv/gojsonreference)) = bd5ef7b
 Provides:       bundled(golang(github.com/xeipuuv/gojsonschema)) = 6b67b3f
-Provides:       bundled(golang(golang.org/x/crypto)) = 0.21.0
-Provides:       bundled(golang(golang.org/x/net)) = 0.23.0
-Provides:       bundled(golang(golang.org/x/sync)) = 0.1.0
-Provides:       bundled(golang(golang.org/x/sys)) = 0.18.0
-Provides:       bundled(golang(golang.org/x/text)) = 0.14.0
+Provides:       bundled(golang(golang.org/x/crypto)) = 0.36.0
+Provides:       bundled(golang(golang.org/x/net)) = 0.38.0
+Provides:       bundled(golang(golang.org/x/sync)) = 0.12.0
+Provides:       bundled(golang(golang.org/x/sys)) = 0.31.0
+Provides:       bundled(golang(golang.org/x/text)) = 0.23.0
 Provides:       bundled(golang(gopkg.in/yaml.v3)) = 3.0.1
 
 
@@ -169,29 +156,17 @@ PATH=%{buildroot}%{_bindir}:%{gobuilddir}/bin:$PATH \
 
 
 %changelog
-* Fri Apr 24 2026 RHEL Packaging Agent <jotnar@redhat.com> - 3.6.1-8.1
+* Mon Feb 16 2026 Ondřej Pohořelský <opohorel@redhat.com> - 3.7.1-3
 - Rebuild with new Golang
-- Resolves: RHEL-167659, RHEL-170836, RHEL-166651
+- Resolves: RHEL-146102, RHEL-149638
 
-* Fri Mar 27 2026 Ondřej Pohořelský <opohorel@redhat.com> - 3.6.1-8
+* Thu Jan 22 2026 Ondřej Pohořelský <opohorel@redhat.com> - 3.7.1-2
 - Rebuild with new Golang
-- Resolves: RHEL-158724
+- Resolves: RHEL-140548
 
-* Mon Feb 16 2026 Ondřej Pohořelský <opohorel@redhat.com> - 3.6.1-7
-- Rebuild with new Golang
-- Resolves: RHEL-146860, RHEL-149620
-
-* Mon Feb 05 2026 Ondřej Pohořelský <opohorel@redhat.com> - 3.6.1-6
-- Rebuild with new Golang
-- Resolves: RHEL-147080
-
-* Thu Feb 05 2026 Ondřej Pohořelský <opohorel@redhat.com> - 3.6.1-5
-- Rebuild with new Golang
-- Resolves: RHEL-147103
-
-* Mon Dec 01 2025 Ondřej Pohořelský <opohorel@redhat.com> - 3.6.1-4
-- Backport fix for CVE-2025-26625
-- Resolves: RHEL-122431
+* Mon Jan 05 2026 Ondřej Pohořelský <opohorel@redhat.com> - 3.7.1-1
+- Update to 3.7.1
+- Resolves: RHEL-118154, RHEL-122429
 
 * Mon Aug 11 2025 Ondřej Pohořelský <opohorel@redhat.com> - 3.6.1-3
 - Add patch to fix build failures with Go 1.24<
