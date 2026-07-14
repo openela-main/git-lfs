@@ -9,7 +9,7 @@ Version:                3.7.1
 %global gobuilddir %{_builddir}/%{name}-%{version}/_build
 
 Name:           git-lfs
-Release:        4%{?dist}.1
+Release:        4%{?dist}.2
 Summary:        Git extension for versioning large files
 
 License:        MIT
@@ -163,6 +163,10 @@ PATH=%{buildroot}%{_bindir}:%{gobuilddir}/bin:$PATH \
 
 
 %changelog
+* Wed Jul 08 2026 RHEL Packaging Agent <redhat-ymir-agent@redhat.com> - 3.7.1-4.2
+- Rebuild with new Golang
+- Resolves: RHEL-187329
+
 * Thu Jun 11 2026 RHEL Packaging Agent <redhat-ymir-agent@redhat.com> - 3.7.1-4.1
 - Fix CVE-2026-39821: vendored golang.org/x/net/idna ToUnicode
   incorrectly accepting all-ASCII xn-- labels
