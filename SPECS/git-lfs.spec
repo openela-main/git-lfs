@@ -9,7 +9,7 @@ Version:                3.7.1
 %global gobuilddir %{_builddir}/%{name}-%{version}/_build
 
 Name:           git-lfs
-Release:        4%{?dist}.3
+Release:        6%{?dist}
 Summary:        Git extension for versioning large files
 
 License:        MIT
@@ -20,7 +20,6 @@ Source1:        README.Fedora
 # https://github.com/git-lfs/git-lfs/pull/6237
 Patch0:         0001-commands-fix-format-string-type-mismatch-in-lockveri.patch
 
-# CVE-2026-39821: golang.org/x/net/idna - fix ToUnicode and all-ASCII xn-- labels
 # https://github.com/golang/net/commit/8c4c965e028475082408749b50ed7a686df0d265
 Patch1:         git-lfs-3.7.1-CVE-2026-39821.patch
 
@@ -163,22 +162,13 @@ PATH=%{buildroot}%{_bindir}:%{gobuilddir}/bin:$PATH \
 
 
 %changelog
-* Thu Sep 03 2026 RHEL Packaging Agent <redhat-ymir-agent@redhat.com> - 3.7.1-4.3
-- Rebuild with updated golang
-- Resolves: RHEL-241575, RHEL-242274, RHEL-241799
+* Tue Jul 14 2026 RHEL Packaging Agent <redhat-ymir-agent@redhat.com> - 3.7.1-6
+- Fix CVE-2026-39821 in vendored golang.org/x/net/idna
+- Resolves: RHEL-183843, RHEL-187313
 
-* Wed Jul 08 2026 RHEL Packaging Agent <redhat-ymir-agent@redhat.com> - 3.7.1-4.2
+* Mon May 19 2026 Ondřej Pohořelský <opohorel@redhat.com> - 3.7.1-5
 - Rebuild with new Golang
-- Resolves: RHEL-187329
-
-* Thu Jun 11 2026 RHEL Packaging Agent <redhat-ymir-agent@redhat.com> - 3.7.1-4.1
-- Fix CVE-2026-39821: vendored golang.org/x/net/idna ToUnicode
-  incorrectly accepting all-ASCII xn-- labels
-- Resolves: RHEL-183797
-
-* Wed Apr 08 2026 Ondřej Pohořelský <opohorel@redhat.com> - 3.7.1-4
-- Rebuild with new Golang
-- Resolves: RHEL-158765, RHEL-166675, RHEL-167677, RHEL-170838
+- Resolves: RHEL-156656, RHEL-166700, RHEL-167695, RHEL-167389, RHEL-166345, RHEL-177321
 
 * Mon Feb 16 2026 Ondřej Pohořelský <opohorel@redhat.com> - 3.7.1-3
 - Rebuild with new Golang
