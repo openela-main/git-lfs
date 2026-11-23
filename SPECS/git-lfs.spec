@@ -9,7 +9,7 @@ Version:                3.7.1
 %global gobuilddir %{_builddir}/%{name}-%{version}/_build
 
 Name:           git-lfs
-Release:        6%{?dist}
+Release:        6%{?dist}.1
 Summary:        Git extension for versioning large files
 
 License:        MIT
@@ -22,6 +22,8 @@ Patch0:         0001-commands-fix-format-string-type-mismatch-in-lockveri.patch
 
 # https://github.com/golang/net/commit/8c4c965e028475082408749b50ed7a686df0d265
 Patch1:         git-lfs-3.7.1-CVE-2026-39821.patch
+
+Patch2:         Update-bundled-x-net-to-version-0.60.0.patch
 
 # Generated provides by vendor2provides.py
 # https://src.fedoraproject.org/rpms/syncthing/blob/603e4e03a92a7d704d199629dd85304018e8279d/f/vendor2provides.py
@@ -56,11 +58,11 @@ Provides:       bundled(golang(github.com/stretchr/testify)) = 1.6.1
 Provides:       bundled(golang(github.com/xeipuuv/gojsonpointer)) = 4e3ac27
 Provides:       bundled(golang(github.com/xeipuuv/gojsonreference)) = bd5ef7b
 Provides:       bundled(golang(github.com/xeipuuv/gojsonschema)) = 6b67b3f
-Provides:       bundled(golang(golang.org/x/crypto)) = 0.36.0
-Provides:       bundled(golang(golang.org/x/net)) = 0.38.0
-Provides:       bundled(golang(golang.org/x/sync)) = 0.12.0
-Provides:       bundled(golang(golang.org/x/sys)) = 0.31.0
-Provides:       bundled(golang(golang.org/x/text)) = 0.23.0
+Provides:       bundled(golang(golang.org/x/crypto)) = 0.57.0
+Provides:       bundled(golang(golang.org/x/net)) = 0.60.0
+Provides:       bundled(golang(golang.org/x/sync)) = 0.23.0
+Provides:       bundled(golang(golang.org/x/sys)) = 0.48.0
+Provides:       bundled(golang(golang.org/x/text)) = 0.42.0
 Provides:       bundled(golang(gopkg.in/yaml.v3)) = 3.0.1
 
 
@@ -162,6 +164,9 @@ PATH=%{buildroot}%{_bindir}:%{gobuilddir}/bin:$PATH \
 
 
 %changelog
+* Tue Nov 10 2026 Marian Koncek <mkoncek@redhat.com> - 3.7.1-6.1
+- Update bundled x/net and rebuild
+
 * Tue Jul 14 2026 RHEL Packaging Agent <redhat-ymir-agent@redhat.com> - 3.7.1-6
 - Fix CVE-2026-39821 in vendored golang.org/x/net/idna
 - Resolves: RHEL-183843, RHEL-187313
